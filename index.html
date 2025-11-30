@@ -38,12 +38,12 @@
     <div class="card">
       <header>
         <div>
-          <h1>Trang chủ — Quiz 55 câu</h1>
-          <div class="muted">Chọn chế độ: làm 1 câu ngẫu nhiên hoặc làm đề 55 câu.</div>
+          <h1>Trang chủ — Quiz 56 câu</h1>
+          <div class="muted">Chọn chế độ: làm 1 câu ngẫu nhiên hoặc làm đề 56 câu.</div>
         </div>
         <div class="home-actions">
           <button id="modeRandom" class="btn">Random 1 câu</button>
-          <button id="modeExam" class="btn">Làm đề thi (55 câu)</button>
+          <button id="modeExam" class="btn">Làm đề thi (56 câu)</button>
         </div>
       </header>
 
@@ -68,11 +68,11 @@
         <!-- khu vực cho đề thi -->
         <section id="examArea" style="display:none;margin-top:12px">
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <button id="startExam" class="btn">Tạo đề (random 55 câu)</button>
+            <button id="startExam" class="btn">Tạo đề (random 56 câu)</button>
             <button id="submitExam" class="btn secondary">Nộp bài</button>
             <button id="regenExam" class="btn ghost">Tạo đề khác</button>
             <button id="backHome2" class="btn ghost">Quay lại trang chủ</button>
-            <div class="small" style="margin-left:8px">55 câu — thứ tự câu & lựa chọn được xáo</div>
+            <div class="small" style="margin-left:8px">56 câu — thứ tự câu & lựa chọn được xáo</div>
           </div>
 
           <form id="examForm" style="margin-top:12px"></form>
@@ -81,7 +81,7 @@
 
         <!-- trang chủ (giới thiệu ngắn) -->
         <section id="homeIntro" style="margin-top:18px">
-          <div class="small">Nhấn một trong hai nút trên để bắt đầu. "Random 1 câu" chỉ lấy 1 câu, "Làm đề thi" sẽ tạo 55 câu không lặp.</div>
+          <div class="small">Nhấn một trong hai nút trên để bắt đầu. "Random 1 câu" chỉ lấy 1 câu, "Làm đề thi" sẽ tạo 56 câu không lặp.</div>
         </section>
       </main>
 
@@ -92,7 +92,7 @@
   </div>
 
 <script>
-/* --- Dữ liệu 55 câu (mình dùng bộ câu bạn đã cung cấp) --- */
+/* --- Dữ liệu 56 câu (mình dùng bộ câu bạn đã cung cấp) --- */
 const QUESTIONS = [
   {id:1, text:"Trong quá trình trao đổi khí ở tế bào, loại khí nào sẽ khuếch tán từ máu vào tế bào?", options:[
     {key:'A', text:'Khí nitrogen'},
@@ -258,7 +258,7 @@ const QUESTIONS = [
 
   {id:30, text:"Ở các phế nang, oxygen khuếch tán vào máu và được vận chuyển đến để cung cấp cho các tế bào trong cơ thể; carbon dioxide từ máu sẽ khuếch tán vào phế nang và được đưa ra ngoài qua hoạt động thở ra.", answer:'Đ', options:null },
 
-  {id:31, text:"Cho các phát biểu (1)-(6) về trao đổi khí. Có bao nhiêu phát biểu sai?", options:[
+  {id:31, text:"Cho các phát biểu sau: 1. Cơ quan trao đổi khí ở động vật không đa dạng. 2. Các loài động vật có thể trao đổi khí qua da, hệ thống ống khí, mang, phổi,… 3. Tất cả động vật đơn bào và đa bào đều trao đổi khí qua bề mặt cơ thể. 4. Các loài côn trùng trao đổi khí qua hệ thống ống khí. 5. Các loài sống dưới nước như cá, tôm, cua, trai, ... trao đổi khí qua mang. 6. Động vật thuộc lớp Bò sát, Chim, Thú trao đổi khí qua phổi. Có bao nhiêu phát biểu sai?", options:[
     {key:'A', text:'1'},
     {key:'B', text:'2'},
     {key:'C', text:'3'},
@@ -371,6 +371,7 @@ const QUESTIONS = [
   {id:54, text:"Ở thực vật, dựa vào tỉ lệ có trong tế bào mà muối khoáng được chia thành: nhóm có tỉ lệ nhỏ gồm Fe, Zn, Cu, Mo, ... tham gia vào điều hoà quá trình trao đổi chất (ví dụ: Fe là thành phần của nhiều enzyme, ...) (Đ/S)", answer:'Đ', options:null },
 
   {id:55, text:"Các chất dinh dưỡng sau khi được sinh vật hấp thụ vào cơ thể sẽ được sử dụng làm nguyên liệu cấu tạo nên các hợp chất đặc trưng cho tế bào và cơ thể. Các hợp chất đặc trưng này sẽ tham gia cấu tạo nên tế bào và cơ thể sinh vật. (Đ/S)", answer:'Đ', options:null }
+  {id:56, text:"Chì (Pb) là thành phần của nhiều enzyme ở thực vật", answer:'S', options:null, explain:'Phải là protein, không phải lipid' },
 ];
 
 /* --- Helpers --- */
@@ -481,7 +482,7 @@ function generateExam(){
   // copy pool and shuffle
   const pool = QUESTIONS.slice();
   shuffle(pool);
-  const chosen = pool.slice(0, 55);
+  const chosen = pool.slice(0, 56);
   const prepared = chosen.map(q=>{
     let opts = q.options && q.options.length ? q.options.map(o=>({key:o.key,text:o.text})) : [{key:'Đ',text:'Đúng'},{key:'S',text:'Sai'}];
     shuffle(opts);
