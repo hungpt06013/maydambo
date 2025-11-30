@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Random 55 câu - Quiz</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width:900px; margin:24px auto; padding:12px; line-height:1.5; }
+  .card { border:1px solid #ddd; border-radius:8px; padding:18px; box-shadow: 0 2px 6px rgba(0,0,0,0.03); }
+  h1 { margin:0 0 12px 0; font-size:20px; }
+  .controls { margin:12px 0; display:flex; gap:8px; flex-wrap:wrap; }
+  button, a.btn { background:#2b7bf6; color:#fff; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; text-decoration:none; display:inline-block; }
+  button.secondary { background:#6c757d; }
+  .question { margin-top:12px; font-weight:600; }
+  .options { margin-top:12px; }
+  .option { margin:6px 0; }
+  .result { margin-top:12px; padding:10px; border-radius:6px; }
+  .correct { background:#e6ffed; color:#065f2d; border:1px solid #b7f1c6; }
+  .wrong { background:#ffecec; color:#6b0b0b; border:1px solid #f2b3b3; }
+  .explain { margin-top:8px; font-size:0.95em; color:#333; }
+  small.source { color:#666; display:block; margin-top:8px; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>Quiz random — 55 câu (Trao đổi khí, Nước, Dinh dưỡng)</h1>
+    <div class="controls">
+      <a href="#" id="randomLink" class="btn">Lấy câu ngẫu nhiên</a>
+      <button id="nextBtn" class="btn secondary">Câu tiếp theo</button>
+      <button id="checkBtn" class="btn">Kiểm tra</button>
+      <button id="revealBtn" class="btn secondary">Hiện đáp án (bỏ qua kiểm tra)</button>
+    </div>
+
+    <div id="quizArea">
+      <div id="qbox" class="question">Nhấn "Lấy câu ngẫu nhiên" để bắt đầu.</div>
+      <div id="choices" class="options"></div>
+      <div id="result" style="display:none" class="result"></div>
+      <div id="explain" class="explain"></div>
+      <small class="source">Nguồn: tệp câu hỏi bạn đã tải lên. :contentReference[oaicite:1]{index=1}</small>
+    </div>
+  </div>
+
+<script>
+/*
+  Dữ liệu câu hỏi (55 câu) — trích từ tệp người dùng.
+  Mỗi object: {id, text, options: [{key:'A', text:'...'},... ] OR null for Đ/S, answer: 'A'/'B'/... or 'Đ'/'S', explain: optional}
+*/
+const questions = [
+  {id:1, text:"Trong quá trình trao đổi khí ở tế bào, loại khí nào sẽ khuếch tán từ máu vào tế bào?", options:[
+    {key:'A', text:'Khí nitrogen'},
+    {key:'B', text:'Khí carbon dioxide'},
+    {key:'C', text:'Khí oxygen'},
+    {key:'D', text:'Khí hydrogen'}], answer:'C' },
+
+  {id:2, text:"Trao đổi khí ở phổi là quá trình:", options:[
+    {key:'A', text:'Trao đổi khí ở phổi là sự khuếch tán của O2 từ không khí ở phổi vào máu.'},
+    {key:'B', text:'Trao đổi CO2 từ máu vào không khí ở phổi.'},
+    {key:'C', text:'Trao đổi khí ở phổi gồm sự khuếch tán của O2 từ máu vào không khí ở phổi và của CO2 từ không khí ở phổi vào máu.'},
+    {key:'D', text:'Trao đổi khí ở phổi gồm sự khuếch tán của O2 từ không khí ở phổi vào máu và của CO2 từ máu vào không khí ở phổi.'}], answer:'D' },
+
+  {id:3, text:"Quá trình hô hấp ở thực vật có ý nghĩa:", options:[
+    {key:'A', text:'Đảm bảo sự cân bằng O2 và CO2 trong khí quyển'},
+    {key:'B', text:'Tạo ra năng lượng cung cấp cho hoạt động sống của các tế bào và cơ thể sinh vật'},
+    {key:'C', text:'Làm sạch môi trường'},
+    {key:'D', text:'Chuyển hóa glucid thành CO2 và H2O'}], answer:'B' },
+
+  {id:4, text:"Cơ quan giúp thực vật trao đổi khí với môi trường là:", options:[
+    {key:'A', text:'Lục lạp'},
+    {key:'B', text:'Rễ'},
+    {key:'C', text:'Khí khổng'},
+    {key:'D', text:'Mô dậu'}], answer:'C' },
+
+  {id:5, text:"Cấu tạo của khí khổng:", options:[
+    {key:'A', text:'Mỗi khí khổng gồm hai tế bào hình hạt đậu nằm áp sát nhau, thành ngoài mỏng, thành trong dày.'},
+    {key:'B', text:'Mỗi khí khổng gồm bốn tế bào hình hạt đậu nằm áp sát nhau, thành ngoài mỏng, thành trong dày.'},
+    {key:'C', text:'Mỗi khí khổng gồm hai tế bào hình bầu dục nằm áp sát nhau.'},
+    {key:'D', text:'Mỗi khí khổng gồm hai tế bào hình que nằm áp sát nhau, thành ngoài mỏng, thành trong dày.'}], answer:'A' },
+
+  {id:6, text:"Chức năng của khí khổng:", options:[
+    {key:'A', text:'Trao đổi khí'},
+    {key:'B', text:'Thoát hơi nước'},
+    {key:'C', text:'Quang hợp'},
+    {key:'D', text:'Cả A và B'}], answer:'D' },
+
+  {id:7, text:"Ở cá trao đổi khí diễn ra nhờ cơ quan:", options:[
+    {key:'A', text:'Mang'},
+    {key:'B', text:'Phổi'},
+    {key:'C', text:'Da'},
+    {key:'D', text:'Hệ thống ống khí'}], answer:'A' },
+
+  {id:8, text:"Phát biểu nào sau đây là sai khi nói về các hình thức trao đổi khí ở động vật?", options:[
+    {key:'A', text:'Giun đất trao đổi khí qua da.'},
+    {key:'B', text:'Cá trao đổi khí bằng mang.'},
+    {key:'C', text:'Châu chấu trao đổi khí bằng mang.'},
+    {key:'D', text:'Mèo trao đổi khí bằng phổi.'}], answer:'C' },
+
+  {id:9, text:"Cho các loài: Ếch trưởng thành; Châu chấu; Cá chép; Rắn hổ mang; Chim sẻ; Cua; Chuột đồng; Giun đất. Có bao nhiêu loài hô hấp bằng phổi?", options:[
+    {key:'A', text:'2'},
+    {key:'B', text:'3'},
+    {key:'C', text:'4'},
+    {key:'D', text:'5'}], answer:'C', explain:'Các loài hô hấp bằng phổi trong danh sách: Ếch trưởng thành, Rắn hổ mang, Chim sẻ, Chuột đồng.' },
+
+  {id:10, text:"Trong quá trình quang hợp ở thực vật, các khí được trao đổi qua khí khổng như thế nào?", options:[
+    {key:'A', text:'CO2 và O2 khuếch tán từ môi trường vào trong tế bào lá, hơi nước thoát ra ngoài.'},
+    {key:'B', text:'O2 và CO2 khuếch tán từ trong tế bào lá ra môi trường.'},
+    {key:'C', text:'O2 khuếch tán từ môi trường vào trong tế bào lá, CO2 khuếch tán từ trong tế bào lá ra môi trường.'},
+    {key:'D', text:'CO2 khuếch tán từ môi trường vào trong tế bào lá, O2 khuếch tán từ trong tế bào lá ra môi trường.'}], answer:'D' },
+
+  {id:11, text:"Có bao nhiêu quá trình dưới đây liên quan đến trao đổi khí? (1) Quang hợp ở thực vật (2) Hô hấp tế bào ở động vật (3) Hấp thụ nước ở rễ cây (4) Thoát hơi nước qua khí khổng (5) Hô hấp ở thực vật", options:[
+    {key:'A', text:'1'},
+    {key:'B', text:'2'},
+    {key:'C', text:'3'},
+    {key:'D', text:'4'}], answer:'D', explain:'Các quá trình liên quan: 1,2,4,5' },
+
+  {id:12, text:"Cho các phát biểu: (1) Trao đổi khí chỉ xảy ra ở động vật có phổi. (2) Quá trình trao đổi khí và hô hấp tế bào có mối liên hệ chặt chẽ. (3) Ở người, trao đổi khí xảy ra ở các mao mạch của phổi. (4) Sinh vật lấy khí O₂ hoặc CO₂ và thải khí ra môi trường theo khuếch tán. Có bao nhiêu phát biểu đúng?", options:[
+    {key:'A', text:'1'},
+    {key:'B', text:'2'},
+    {key:'C', text:'3'},
+    {key:'D', text:'4'}], answer:'C', explain:'Đúng là 2,3,4' },
+
+  {id:13, text:"Cho các phát biểu: (1) Cơ chế trao đổi khí là khuếch tán từ nơi có nồng độ thấp sang cao. (2) Quá trình trao đổi khí ở động vật diễn ra chủ yếu qua hô hấp ngoài. (3) Thực vật trao đổi khí thông qua khí khổng. (4) Sản phẩm của hô hấp tế bào là nguyên liệu cho trao đổi khí. (5) Sự trao đổi khí giúp đảm bảo cho các hoạt động sống của cơ thể sinh vật. Có bao nhiêu phát biểu đúng?", options:[
+    {key:'A', text:'1'},
+    {key:'B', text:'2'},
+    {key:'C', text:'3'},
+    {key:'D', text:'4'}], answer:'C', explain:'Đúng là 2,3,5' },
+
+  {id:14, text:"Cho các phát biểu về khí khổng: (1) Khí khổng gồm 2 tế bào hình hạt đậu. (2) Khí khổng chỉ mở vào ban đêm. (3) Thành trong tế bào khí khổng dày hơn thành ngoài. (4) Tế bào khí khổng chứa lục lạp. (5) Khí khổng đóng khi có ánh sáng và đủ nước. Có bao nhiêu phát biểu đúng?", options:[
+    {key:'A', text:'1'},
+    {key:'B', text:'2'},
+    {key:'C', text:'3'},
+    {key:'D', text:'4'}], answer:'C', explain:'Đúng là 1,3,4' },
+
+  {id:15, text:"Sắp xếp trình tự trao đổi khí ở người: (1) CO2 từ các tế bào được vận chuyển theo máu về phổi. (2) O2 từ không khí khuếch tán qua phế nang vào máu. (3) Không khí đi vào cơ thể qua khoang mũi → hầu → khí quản → phế quản → phổi. (4) CO2 khuếch tán từ máu vào phế nang và được thải ra ngoài qua động tác thở ra. Chọn:", options:[
+    {key:'A', text:'1234'},
+    {key:'B', text:'3421'},
+    {key:'C', text:'3214'},
+    {key:'D', text:'2432'}], answer:'C' },
+
+  {id:16, text:"Trao đổi khí là", options:[
+    {key:'A', text:'sự trao đổi khí oxygen và khí carbon dioxide giữa cơ thể sinh vật và môi trường.'},
+    {key:'B', text:'sự trao đổi khí oxygen và khí carbon dioxide giữa sinh vật này và sinh vật khác.'},
+    {key:'C', text:'sự trao đổi khí hydrogen và khí carbon dioxide giữa cơ thể sinh vật và môi trường.'},
+    {key:'D', text:'sự trao đổi khí hyrogen và khí carbon dioxide giữa sinh vật này và sinh vật khác.'}], answer:'A' },
+
+  {id:17, text:"Sự trao đổi khí ở thực vật diễn ra trong", options:[
+    {key:'A', text:'hô hấp.'},
+    {key:'B', text:'quang hợp.'},
+    {key:'C', text:'quang hợp và hô hấp.'},
+    {key:'D', text:'hấp thụ kháng, quang hợp và hô hấp.'}], answer:'C' },
+
+  {id:18, text:"Quá trình trao đổi khí giữa cơ thể sinh vật với môi trường tuân theo cơ chế", options:[
+    {key:'A', text:'khuếch tán.'},
+    {key:'B', text:'bão hòa.'},
+    {key:'C', text:'thẩm thấu.'},
+    {key:'D', text:'thẩm tách.'}], answer:'A' },
+
+  {id:19, text:"Ghép bảng: (1) Hô hấp động vật (2) Hô hấp thực vật (3) Quang hợp - chọn cách ghép đúng", options:[
+    {key:'A', text:'1-a,c; 2-a,d; 3-b,d.'},
+    {key:'B', text:'1-a,d; 2-a,d; 3-b,c.'},
+    {key:'C', text:'1-b,c; 2-a,d; 3-b,d.'},
+    {key:'D', text:'1-a,c; 2-b,d; 3-a,c.'}], answer:'B' },
+
+  {id:20, text:"Ở thực vật, trao đổi khí với môi trường chủ yếu qua", options:[
+    {key:'A', text:'tế bào biểu mô ở lá cây.'},
+    {key:'B', text:'tế bào biểu bì của lá cây.'},
+    {key:'C', text:'tế bào khí khổng ở lá cây.'},
+    {key:'D', text:'tế bào mô mềm ở lá cây.'}], answer:'C' },
+
+  {id:21, text:"Ở thực vật, vận chuyển khí O2 vào khoang chứa khí và CO2 ra ngoài qua khí khổng diễn ra vào", options:[
+    {key:'A', text:'ban ngày.'},
+    {key:'B', text:'ban đêm.'},
+    {key:'C', text:'ban ngày và ban đêm.'},
+    {key:'D', text:'lúc khí khổng đóng hoàn toàn.'}], answer:'A' },
+
+  {id:22, text:"Nhóm sinh vật trao đổi khí qua bề mặt cơ thể?", options:[
+    {key:'A', text:'Ruột khoang, giun tròn, giun dẹp, động vật nguyên sinh.'},
+    {key:'B', text:'Ruột khoang, giun tròn, giun dẹp, côn trùng, cá.'},
+    {key:'C', text:'Ruột khoang, giun tròn, giun dẹp, bò sát, côn trùng.'},
+    {key:'D', text:'Ruột khoang, giun tròn, giun dẹp, cá, chim, thú.'}], answer:'A' },
+
+  {id:23, text:"Cho ảnh mô tả đường đi của khí ở người: (1),(2),(3) lần lượt là", options:[
+    {key:'A', text:'khí quản; thanh quản; phế quản.'},
+    {key:'B', text:'thanh quản; khí quản; phế quản.'},
+    {key:'C', text:'phế quản; khí quản; thanh quản.'},
+    {key:'D', text:'thanh quản; phế quản; khí quản.'}], answer:'B' },
+
+  {id:24, text:"Vì sao vào ban đêm không nên đặt nhiều hoa/cây trong phòng ngủ đóng kín cửa?", options:[
+    {key:'A', text:'Vì khi không có ánh sáng, thực vật chỉ thực hiện hô hấp (lấy O2 và thải CO2) dẫn đến O2 cạn kiệt, CO2 tăng có thể gây ngạt.'},
+    {key:'B', text:'Vì khi không có ánh sáng, thực vật chỉ thực hiện hô hấp dẫn đến O2 và CO2 đều cạn kiệt.'},
+    {key:'C', text:'Vì trong phòng kín, thực vật chỉ thực hiện quang hợp dẫn đến O2 và CO2 đều cạn kiệt.'},
+    {key:'D', text:'Vì trong phòng kín, thực vật chỉ thực hiện quang hợp (lấy CO2 và thải O2) dẫn đến CO2 cạn kiệt.'}], answer:'A' },
+
+  {id:25, text:"Khi bắt cá bỏ lên môi trường trên cạn, sau 1 thời gian cá chết do:", options:[
+    {key:'A', text:'da cá bị khô khiến cá không thể thực hiện trao đổi khí.'},
+    {key:'B', text:'mang cá bị khô khiến cá không thể thực hiện trao đổi khí.'},
+    {key:'C', text:'túi khí của cá bị khô khiến cá không thể thực hiện trao đổi khí.'},
+    {key:'D', text:'hệ thống ống khí của cá bị khô khiến cá không thể thực hiện trao đổi khí.'}], answer:'B' },
+
+  {id:26, text:"Hít thở sâu là một trong những biện pháp giúp tăng cường sử dụng khí oxygen hiệu quả.", /* Đ/S */ answer:'Đ', options:null },
+
+  {id:27, text:"Người khỏe mạnh trung bình có thể nín thở từ 2-4 phút.", /* Đ/S */ answer:'S', options:null },
+
+  {id:28, text:"Khi hít vào, không khí ở môi trường ngoài đi qua đâu?", options:[
+    {key:'A', text:'Khoang mũi -> khí quản -> phế quản -> phổi -> các phế nang trong phổi'},
+    {key:'B', text:'Khoang mũi -> khí quản -> phế quản -> phổi -> màng phổi'},
+    {key:'C', text:'Khoang mũi -> thanh quản -> phế quản -> phổi -> các phế nang trong phổi'},
+    {key:'D', text:'Khoang mũi -> thanh quản -> phế quản -> phổi -> màng phổi'}], answer:'C' },
+
+  {id:29, text:"Ở các phế nang, oxygen khuếch tán vào phế nang và được vận chuyển...; carbon dioxide từ phế nang sẽ khuếch tán vào máu và được đưa ra ngoài qua thở ra.", /* Đ/S (sai) */ answer:'S', options:null },
+
+  {id:30, text:"Ở các phế nang, oxygen khuếch tán vào máu và ...; carbon dioxide từ máu sẽ khuếch tán vào phế nang và được đưa ra ngoài qua thở ra.", /* Đ/S (đúng) */ answer:'Đ', options:null },
+
+  {id:31, text:"Cho các phát biểu (1)-(6) về trao đổi khí. Có bao nhiêu phát biểu sai?", options:[
+    {key:'A', text:'1'},
+    {key:'B', text:'2'},
+    {key:'C', text:'3'},
+    {key:'D', text:'4'}], answer:'B', explain:'Các phát biểu sai là 1 và 3 (theo đáp án: B)' },
+
+  {id:32, text:"Danh sách: Thủy tức, Kiến, Cá rô, Cá sấu, Sán lông, Hươu cao cổ, Châu chấu, Chim bồ câu, Ếch, Trai. Có bao nhiêu trao đổi khí qua da?", options:[
+    {key:'A', text:'1'},
+    {key:'B', text:'2'},
+    {key:'C', text:'3'},
+    {key:'D', text:'4'}], answer:'C', explain:'Các loài trao đổi qua da: thủy tức, sán lông, ếch' },
+
+  {id:33, text:"Trong danh sách trên, có bao nhiêu trao đổi khí qua phổi?", options:[
+    {key:'A', text:'1'},
+    {key:'B', text:'2'},
+    {key:'C', text:'3'},
+    {key:'D', text:'4'}], answer:'D', explain:'Đáp án cung cấp là D: cá sấu, hươu cao cổ, chim bồ câu, ếch' },
+
+  {id:34, text:"Trong danh sách trên, có bao nhiêu trao đổi khí qua hệ thống ống khí?", options:[
+    {key:'A', text:'1'},
+    {key:'B', text:'2'},
+    {key:'C', text:'3'},
+    {key:'D', text:'4'}], answer:'B', explain:'Đáp án: kiến, châu chấu' },
+
+  {id:35, text:"Trong danh sách trên, có bao nhiêu trao đổi khí qua mang?", options:[
+    {key:'A', text:'1'},
+    {key:'B', text:'2'},
+    {key:'C', text:'3'},
+    {key:'D', text:'4'}], answer:'B', explain:'Đáp án: cá, trai' },
+
+  {id:36, text:"Quá trình khuếch tán trong trao đổi khí ở sinh vật xảy ra tiêu tốn năng lượng.", /* Đ/S */ answer:'S', options:null },
+
+  {id:37, text:"Nước là", options:[
+    {key:'A', text:'một dung môi'},
+    {key:'B', text:'một hỗn hợp'},
+    {key:'C', text:'một huyền phù'},
+    {key:'D', text:'một nhũ tương'}], answer:'A' },
+
+  {id:38, text:"Nước có khả năng hòa tan tốt được nhiều chất như: các muối tan, đường, …", /* Đ/S */ answer:'Đ', options:null },
+
+  {id:39, text:"Nước có khả năng hòa tan tốt được nhiều khí như O2, CO2, …", /* Đ/S */ answer:'S', options:null, explain:'Chú thích: chỉ hòa tan được 1 phần (không hòa tan tốt nhiều khí như chất rắn)' },
+
+  {id:40, text:"Nước có khả năng phản ứng với một số chất hóa học khác.", /* Đ/S */ answer:'Đ', options:null },
+
+  {id:41, text:"Một phân tử nước được cấu tạo gồm", options:[
+    {key:'A', text:'một nguyên tử oxygen và hai nguyên tử hydrogen liên kết với nhau bằng liên kết cộng hóa trị.'},
+    {key:'B', text:'một nguyên tử oxygen và hai nguyên tử hydrogen liên kết với nhau bằng liên kết bổ sung.'},
+    {key:'C', text:'hai nguyên tử oxygen và một nguyên tử hydrogen liên kết với nhau bằng liên kết cộng hóa trị.'},
+    {key:'D', text:'hai nguyên tử oxygen và một nguyên tử hydrogen liên kết với nhau bằng liên kết bổ sung.'}], answer:'A' },
+
+  {id:42, text:"Phân tử nước có tính phân cực do", options:[
+    {key:'A', text:'nguyên tử oxygen có khả năng hút electron mạnh hơn nguyên tử hydrogen khiến đầu oxygen tích điện âm một phần còn đầu hydrogen tích điện dương một phần.'},
+    {key:'B', text:'nguyên tử oxygen có khả năng hút electron mạnh hơn nguyên tử hydrogen khiến đầu oxygen tích điện dương một phần còn đầu hydrogen tích điện âm một phần.'},
+    {key:'C', text:'nguyên tử hydrogen có khả năng hút electron mạnh hơn nguyên tử oxygen khiến đầu oxygen tích điện âm một phần còn đầu hydrogen tích điện dương một phần.'},
+    {key:'D', text:'nguyên tử hydrogen có khả năng hút electron mạnh hơn nguyên tử oxygen khiến đầu oxygen tích điện dương một phần còn đầu hydrogen tích điện âm một phần.'}], answer:'A' },
+
+  {id:43, text:"Nước có thể làm dung môi hòa tan nhiều chất là nhờ", options:[
+    {key:'A', text:'tính phân cực của nước.'},
+    {key:'B', text:'tính dẫn nhiệt của nước.'},
+    {key:'C', text:'tính dẫn điện của nước.'},
+    {key:'D', text:'tính chất lỏng của nước.'}], answer:'A' },
+
+  {id:44, text:"Nước chiếm hơn … (1)… khối lượng cơ thể sinh vật, một số loài ... hàm lượng nước trong cơ thể lên đến hơn … (2)… (các loài sứa biển). (1) và (2) lần lượt là", options:[
+    {key:'A', text:'(1) 70%; (2) 90%.'},
+    {key:'B', text:'(1) 60%; (2) 90%.'},
+    {key:'C', text:'(1) 70%; (2) 95%.'},
+    {key:'D', text:'(1) 75%; (2) 90%.'}], answer:'A' },
+
+  {id:45, text:"Cho các vai trò của nước: (1) Điều hòa thân nhiệt (2) Cung cấp năng lượng (3) Là dung môi hòa tan và vận chuyển các chất (4) Là nguyên liệu và môi trường cho phản ứng. Số vai trò của nước là", options:[
+    {key:'A', text:'1.'},
+    {key:'B', text:'2.'},
+    {key:'C', text:'3.'},
+    {key:'D', text:'4.'}], answer:'D' },
+
+  {id:46, text:"Các chất hóa học được cơ thể hấp thụ từ môi trường... được gọi là", options:[
+    {key:'A', text:'chất dinh dưỡng.'},
+    {key:'B', text:'chất xúc tác sinh học.'},
+    {key:'C', text:'đại phân tử sinh học.'},
+    {key:'D', text:'chất điều hòa sinh trưởng.'}], answer:'A' },
+
+  {id:47, text:"Ghép: (1) Các chất không cung cấp năng lượng (2) Các chất cung cấp năng lượng - chọn", options:[
+    {key:'A', text:'1-a,b; 2-c,d,e.'},
+    {key:'B', text:'1-a,d; 2-b,c,e.'},
+    {key:'C', text:'1-a,c; 2-b,d,e.'},
+    {key:'D', text:'1-a,e; 2-b,c,d.'}], answer:'B' },
+
+  {id:48, text:"Nhóm chất - Vai trò, ghép đúng là", options:[
+    {key:'A', text:'1-c, 2-a, 3-d, 4-b.'},
+    {key:'B', text:'1-c, 2-a, 3-b, 4-d.'},
+    {key:'C', text:'1-a, 2-b, 3-c, 4-d.'},
+    {key:'D', text:'1-a, 2-c, 3-b, 4-d.'}], answer:'A' },
+
+  {id:49, text:"Nitrogen có vai trò quan trọng vì", options:[
+    {key:'A', text:'nitrogen là thành phần cấu tạo protein, chất diệp lục,…'},
+    {key:'B', text:'nitrogen đảm bảo sự cân bằng nước và ion trong cây.'},
+    {key:'C', text:'nitrogen giữ vai trò chính trong việc đóng mở khí khổng.'},
+    {key:'D', text:'nitrogen giúp kích thích hấp thụ muối khoáng của rễ.'}], answer:'A' },
+
+  {id:50, text:"Chúng ta cần ăn nhiều loại thức ăn khác nhau chủ yếu để", options:[
+    {key:'A', text:'giúp hệ tiêu hóa hoạt động dễ dàng và hiệu quả hơn.'},
+    {key:'B', text:'đảm bảo cơ thể được cung cấp đủ lượng năng lượng cần thiết.'},
+    {key:'C', text:'cung cấp đầy đủ các chất dinh dưỡng cho sự sinh trưởng và phát triển.'},
+    {key:'D', text:'kích thích vị giác để dung nạp nhiều nhất có thể.'}], answer:'C' },
+
+  {id:51, text:"Chất dinh dưỡng của thực vật là muối khoáng được rễ hấp thụ từ đất.", /* Đ/S */ answer:'Đ', options:null },
+
+  {id:52, text:"Dựa vào tỉ lệ có trong tế bào, muối khoáng chia thành: nhóm chiếm tỉ lệ lớn gồm có C, H, O, N, P, …", /* Đ/S */ answer:'Đ', options:null },
+
+  {id:53, text:"Ở thực vật, N có vai trò quan trọng vì N là thành phần cấu tạo nên lipid và chất diệp lục", /* Đ/S - sai */ answer:'S', options:null, explain:'Phải là protein, không phải lipid' },
+
+  {id:54, text:"Ở thực vật, nhóm có tỉ lệ nhỏ gồm Fe, Zn, Cu, Mo,... tham gia điều hòa quá trình trao đổi chất. (Đ/S)", /* Đ/S */ answer:'Đ', options:null },
+
+  {id:55, text:"Các chất dinh dưỡng sau khi hấp thụ sẽ được sử dụng làm nguyên liệu cấu tạo nên các hợp chất đặc trưng cho tế bào. (Đ/S)", /* Đ/S */ answer:'Đ', options:null }
+];
+
+// utility: shuffle array in-place
+function shuffle(arr) {
+  for(let i=arr.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+}
+
+// state
+let current = null;
+
+// render question
+function renderQuestion(q) {
+  const qbox = document.getElementById('qbox');
+  const choicesDiv = document.getElementById('choices');
+  const resultDiv = document.getElementById('result');
+  const explainDiv = document.getElementById('explain');
+  resultDiv.style.display='none';
+  explainDiv.textContent='';
+  choicesDiv.innerHTML='';
+
+  qbox.textContent = 'Câu ' + q.id + ': ' + q.text;
+
+  // build choices
+  let opts = [];
+  if(q.options && Array.isArray(q.options)) {
+    // clone to avoid mutating original
+    opts = q.options.map(o=>({key:o.key, text:o.text}));
+  } else {
+    // Đ/S question => provide options Đúng / Sai as keys Đ / S
+    opts = [{key:'Đ', text:'Đúng'}, {key:'S', text:'Sai'}];
+  }
+
+  // shuffle presentation order
+  shuffle(opts);
+
+  // store mapping on current
+  current = {
+    q: q,
+    shownOptions: opts
+  };
+
+  const form = document.createElement('form');
+  form.id='qaForm';
+  opts.forEach((o, idx)=>{
+    const id = 'opt_'+idx;
+    const div = document.createElement('div');
+    div.className='option';
+    div.innerHTML = `<label><input type="radio" name="choice" value="${o.key}" id="${id}"> <strong>${o.key}.</strong> ${o.text}</label>`;
+    form.appendChild(div);
+  });
+
+  choicesDiv.appendChild(form);
+}
+
+// pick random question and render
+function pickRandom() {
+  const idx = Math.floor(Math.random()*questions.length);
+  const q = questions[idx];
+  renderQuestion(q);
+}
+
+// check answer
+function checkAnswer(showOnly=false) {
+  if(!current) return alert('Chưa có câu hỏi. Bấm "Lấy câu ngẫu nhiên" trước.');
+  const form = document.getElementById('qaForm');
+  if(!form) return;
+  const selected = form.elements['choice'] ? form.elements['choice'].value : null;
+
+  const resultDiv = document.getElementById('result');
+  const explainDiv = document.getElementById('explain');
+  resultDiv.style.display='block';
+
+  // if showOnly requested (hiển thị đáp án), treat as no selection
+  if(showOnly || !selected) {
+    // show correct answer
+    const corr = current.q.answer;
+    let corrText = '';
+    if(current.q.options && current.q.options.length){
+      const found = current.q.options.find(o=>o.key === corr);
+      corrText = found ? `${corr}. ${found.text}` : corr;
+    } else {
+      corrText = (corr === 'Đ' ? 'Đúng' : (corr === 'S' ? 'Sai' : corr));
+    }
+    resultDiv.className='result correct';
+    resultDiv.innerHTML = `<strong>Đáp án đúng:</strong> ${corrText}`;
+    explainDiv.textContent = current.q.explain ? 'Ghi chú: ' + current.q.explain : '';
+    return;
+  }
+
+  const correct = current.q.answer;
+  const isCorrect = (selected === correct);
+
+  if(isCorrect) {
+    resultDiv.className='result correct';
+    resultDiv.innerHTML = '<strong>ĐÚNG.</strong>';
+    explainDiv.textContent = current.q.explain ? 'Ghi chú: ' + current.q.explain : '';
+  } else {
+    resultDiv.className='result wrong';
+    // find correct text
+    let corrText = correct;
+    if(current.q.options && current.q.options.length){
+      const found = current.q.options.find(o=>o.key === correct);
+      corrText = found ? `${correct}. ${found.text}` : correct;
+    } else {
+      corrText = (correct === 'Đ' ? 'Đúng' : (correct === 'S' ? 'Sai' : correct));
+    }
+    resultDiv.innerHTML = `<strong>SAI.</strong> Đáp án đúng: <strong>${corrText}</strong>`;
+    explainDiv.textContent = current.q.explain ? 'Ghi chú: ' + current.q.explain : '';
+  }
+}
+
+// events
+document.getElementById('randomLink').addEventListener('click', function(e){
+  e.preventDefault();
+  pickRandom();
+});
+
+document.getElementById('nextBtn').addEventListener('click', function(){
+  pickRandom();
+});
+
+document.getElementById('checkBtn').addEventListener('click', function(){
+  checkAnswer(false);
+});
+
+document.getElementById('revealBtn').addEventListener('click', function(){
+  checkAnswer(true);
+});
+
+// optional: show a random one at load
+// pickRandom();
+</script>
+</body>
+</html>
