@@ -497,7 +497,7 @@ function renderExam(){
     const q = item.q;
     const opts = item.shown;
     const qdiv = document.createElement('div'); qdiv.className='exam-question'; qdiv.id = 'exam_q_'+idx;
-    qdiv.innerHTML = `<div><span class="qnum">${idx+1}</span> <span class="small"> (câu gốc #${q.id})</span></div>
+    qdiv.innerHTML = `<div><span class="qnum">${idx+1}</span> <span class="small"> </span></div>
       <div style="font-weight:700;margin-top:6px">${q.text}</div>`;
     const optCon = document.createElement('div'); optCon.className='options';
     opts.forEach((o,j)=>{
