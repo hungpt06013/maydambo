@@ -97,6 +97,32 @@ document.addEventListener('visibilitychange', () => {
     });
   }
 });
+
+// Function để reset số người online (có thể gọi từ Console)
+window.resetOnlineCount = function() {
+  firebase.database().ref('presence').remove().then(() => {
+    console.log('Bước 1: Đã xóa toàn bộ presence data.');
+    
+    // Đợi 1 giây để UI cập nhật về 0
+    setTimeout(() => {
+      const browserId = localStorage.getItem('browserId');
+      if (browserId) {
+        const myPresenceRef = firebase.database().ref('presence').child(browserId);
+        myPresenceRef.set({
+          online: true,
+          timestamp: Date.now()
+        }).then(() => {
+          console.log('Bước 2: Đã đăng ký lại. Số người online sẽ hiển thị 1 sau vài giây.');
+        });
+      }
+    }, 1000);
+  }).catch(error => {
+    console.error('Lỗi:', error);
+  });
+};
+
+console.log('💡 Để reset số người online, gõ: resetOnlineCount()');
+</script>
 </script>
 </head>
 <body class="antialiased bg-gradient-to-br from-blue-50 to-green-50 min-h-screen p-6">
